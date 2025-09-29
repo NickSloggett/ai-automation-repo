@@ -65,7 +65,25 @@ async def app_info():
     }
 
 # Import and include routers
-# from .routers import agents, workflows, monitoring
+from .routers import agents_router
+
+# Include routers
+app.include_router(agents_router)
+
+# Startup and shutdown events
+@app.on_event("startup")
+async def startup_event():
+    """Initialize on startup."""
+    from .database import init_db
+    await init_db()
+    logger.info("Application started", environment=settings.environment)
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    from .database import close_db
+    await close_db()
+    logger.info("Application shutdown")
 
 if __name__ == "__main__":
     import uvicorn
