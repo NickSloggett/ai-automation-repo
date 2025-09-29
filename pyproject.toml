@@ -1,0 +1,133 @@
+[tool.poetry]
+name = "ai-automation-boilerplate"
+version = "0.1.0"
+description = "Comprehensive boilerplate for AI automation projects with turnkey client implementations"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+license = "MIT"
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+# Core AI/ML frameworks
+langchain = "^0.1.0"
+langchain-openai = "^0.0.5"
+llamaindex = "^0.9.0"
+haystack-ai = "^2.0.0"
+transformers = {extras = ["torch"], version = "^4.36.0"}
+openai = "^1.12.0"
+anthropic = "^0.8.0"
+groq = "^0.4.0"
+
+# Automation and orchestration
+crewai = "^0.1.0"
+autogen = "^0.2.0"
+prefect = "^2.14.0"
+airflow = {extras = ["celery", "crypto", "postgres"], version = "^2.8.0"}
+celery = "^5.3.0"
+
+# Data handling
+pandas = "^2.1.0"
+numpy = "^1.26.0"
+sqlalchemy = "^2.0.0"
+prisma = "^0.12.0"
+pinecone-client = "^3.0.0"
+weaviate-client = "^4.4.0"
+
+# Web/integration
+fastapi = "^0.109.0"
+uvicorn = {extras = ["standard"], version = "^0.27.0"}
+streamlit = "^1.29.0"
+gradio = "^4.14.0"
+selenium = "^4.16.0"
+playwright = "^1.40.0"
+
+# Monitoring/Security
+sentry-sdk = "^1.39.0"
+prometheus-client = "^0.19.0"
+auth0-python = "^4.4.0"
+pyjwt = "^2.8.0"
+firebase-admin = "^6.2.0"
+
+# Development and testing
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+pytest-asyncio = "^0.23.0"
+hypothesis = "^6.92.0"
+black = "^23.12.0"
+flake8 = "^7.0.0"
+mypy = "^1.8.0"
+isort = "^5.13.0"
+pre-commit = "^3.6.0"
+
+# Configuration and utilities
+pydantic = "^2.5.0"
+python-dotenv = "^1.0.0"
+pyyaml = "^6.0.1"
+jinja2 = "^3.1.0"
+structlog = "^23.2.0"
+aiofiles = "^23.2.0"
+httpx = "^0.26.0"
+
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.0.0"
+notebook = "^7.0.0"
+ipykernel = "^6.27.0"
+
+[tool.poetry.scripts]
+ai-automation = "src.cli:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = ["src"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --cov=src --cov-report=html --cov-report=term-missing"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/test_*", "*/__init__.py"]

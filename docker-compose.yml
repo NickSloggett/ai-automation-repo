@@ -1,0 +1,157 @@
+version: '3.8'
+
+services:
+  # Main application service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=true
+    volumes:
+      - ./src:/app/src
+      - ./config:/app/config
+      - ./examples:/app/examples
+    depends_on:
+      - postgres
+      - redis
+      - vector-store
+    networks:
+      - ai-automation-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ai_automation
+      POSTGRES_USER: ai_user
+      POSTGRES_PASSWORD: ai_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ai-automation-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_user -d ai_automation"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and task queues
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ai-automation-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Vector store (Pinecone or Weaviate)
+  vector-store:
+    image: weaviate/weaviate:1.21.8
+    ports:
+      - "8080:8080"
+    environment:
+      - QUERY_DEFAULTS_LIMIT=25
+      - AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true
+      - PERSISTENCE_DATA_PATH=/var/lib/weaviate
+      - DEFAULT_VECTORIZER_MODULE=none
+      - CLUSTER_HOSTNAME=node1
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    networks:
+      - ai-automation-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/meta"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Monitoring stack
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - ai-automation-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - ai-automation-network
+    depends_on:
+      - prometheus
+
+  # Background task worker
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["python", "-m", "src.workers.task_worker"]
+    environment:
+      - ENVIRONMENT=development
+    volumes:
+      - ./src:/app/src
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - ai-automation-network
+
+  # Jupyter notebook for development
+  jupyter:
+    image: jupyter/scipy-notebook:latest
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/home/jovyan/work
+      - ./src:/home/jovyan/src
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    networks:
+      - ai-automation-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  weaviate_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  ai-automation-network:
+    driver: bridge
