@@ -271,3 +271,10 @@ async def delete_agent(agent_id: str, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete agent: {str(e)}",
         )
+
+
+
+
+
+
+

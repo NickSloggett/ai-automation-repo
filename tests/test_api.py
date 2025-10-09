@@ -73,3 +73,10 @@ async def test_get_agent_not_found(client):
     """Test getting non-existent agent."""
     response = client.get("/agents/nonexistent-id")
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+
+
+
+
+

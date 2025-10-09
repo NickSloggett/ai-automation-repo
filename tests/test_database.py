@@ -169,3 +169,10 @@ async def test_user_api_requests_relationship(db_session):
     user_with_reqs = result.scalar_one()
 
     assert len(user_with_reqs.api_requests) == 2
+
+
+
+
+
+
+
