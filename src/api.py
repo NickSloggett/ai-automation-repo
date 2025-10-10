@@ -1,18 +1,20 @@
 """FastAPI application for AI Automation Boilerplate."""
 
+import time
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
-from .logging import setup_logging
+from .logging import setup_logging, get_logger
 from .monitoring import init_monitoring
 
 # Setup logging and monitoring
 setup_logging()
 init_monitoring()
 
-# Get settings
+# Get settings and logger
 settings = get_settings()
+logger = get_logger(__name__)
 
 # Create FastAPI app
 app = FastAPI(
@@ -43,13 +45,76 @@ async def root():
 
 @app.get("/health/ready")
 async def readiness_check():
-    """Kubernetes readiness probe."""
-    return {"status": "ready"}
+    """Kubernetes readiness probe with database connectivity check."""
+    try:
+        # Check database connectivity
+        from .database import get_db
+        db = get_db()
+        await db.execute("SELECT 1")  # Simple connectivity test
+
+        # Check vector store if configured
+        from .config import get_settings
+        settings = get_settings()
+        if settings.vector_store.provider != "memory":
+            from .vector_store import get_vector_store
+            vector_store = get_vector_store()
+            # Quick health check for vector store
+            await vector_store.health_check()
+
+        return {
+            "status": "ready",
+            "timestamp": "2024-01-01T00:00:00Z",
+            "services": {
+                "database": "healthy",
+                "vector_store": "healthy" if settings.vector_store.provider != "memory" else "n/a"
+            }
+        }
+    except Exception as e:
+        logger.error(f"Readiness check failed: {e}")
+        return {
+            "status": "not ready",
+            "error": str(e),
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
 
 @app.get("/health/live")
 async def liveness_check():
-    """Kubernetes liveness probe."""
-    return {"status": "alive"}
+    """Kubernetes liveness probe with basic system health."""
+    import psutil
+    import os
+
+    try:
+        # Basic system health checks
+        memory_percent = psutil.virtual_memory().percent
+        cpu_percent = psutil.cpu_percent(interval=1)
+
+        # Check if critical services are running
+        critical_services_healthy = True
+
+        # Memory usage check (alert if > 90%)
+        if memory_percent > 90:
+            critical_services_healthy = False
+
+        # CPU usage check (alert if > 95%)
+        if cpu_percent > 95:
+            critical_services_healthy = False
+
+        return {
+            "status": "alive" if critical_services_healthy else "degraded",
+            "timestamp": "2024-01-01T00:00:00Z",
+            "system": {
+                "memory_usage_percent": memory_percent,
+                "cpu_usage_percent": cpu_percent,
+                "uptime_seconds": int(time.time() - psutil.boot_time())
+            }
+        }
+    except Exception as e:
+        logger.error(f"Liveness check failed: {e}")
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
 
 @app.get("/info")
 async def app_info():
