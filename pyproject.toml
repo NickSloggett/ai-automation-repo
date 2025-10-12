@@ -70,6 +70,27 @@ structlog = "^24.4.0"
 aiofiles = "^24.1.0"
 httpx = "^0.28.0"
 
+# Caching and performance
+redis = {extras = ["hiredis"], version = "^5.0.0"}
+aiocache = "^0.12.0"
+
+# Circuit breaker and resilience
+tenacity = "^8.2.0"
+aio-circuitbreaker = "^1.2.0"
+
+# Distributed tracing
+opentelemetry-distro = "^0.45b0"
+opentelemetry-exporter-jaeger = "^1.21.0"
+opentelemetry-instrumentation-fastapi = "^0.45b0"
+opentelemetry-instrumentation-httpx = "^0.45b0"
+
+# Message queue (RabbitMQ)
+aio-pika = "^9.4.0"
+
+# Secrets management
+hvac = "^2.1.0"  # HashiCorp Vault
+boto3 = "^1.34.0"  # AWS Secrets Manager
+
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"
 notebook = "^7.0.0"

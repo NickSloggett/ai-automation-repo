@@ -119,6 +119,13 @@ async def liveness_check():
 @app.get("/info")
 async def app_info():
     """Application information."""
+    from .circuit_breaker import get_circuit_breaker_stats
+    from .caching import get_cache_manager
+
+    circuit_breaker_stats = await get_circuit_breaker_stats()
+    cache_manager = await get_cache_manager()
+    cache_stats = await cache_manager.get_stats()
+
     return {
         "name": settings.project_name,
         "version": settings.version,
@@ -127,6 +134,8 @@ async def app_info():
         "database_url": settings.database.url.replace(settings.database.url.split("://")[1].split("@")[0], "***") if "://" in settings.database.url else "***",
         "vector_store": settings.vector_store.provider,
         "llm_provider": settings.llm.provider,
+        "circuit_breakers": circuit_breaker_stats,
+        "cache_stats": cache_stats,
     }
 
 # Import and include routers
@@ -135,19 +144,75 @@ from .routers import agents_router
 # Include routers
 app.include_router(agents_router)
 
+# Cost tracking endpoints
+@app.get("/costs/summary")
+async def get_cost_summary(
+    start_time: Optional[float] = None,
+    end_time: Optional[float] = None,
+    agent_name: Optional[str] = None,
+):
+    """Get cost summary."""
+    from .cost_tracking import get_cost_tracker
+
+    tracker = await get_cost_tracker()
+    summary = await tracker.get_cost_summary(
+        start_time=start_time,
+        end_time=end_time,
+        agent_name=agent_name
+    )
+    return summary.dict()
+
+@app.get("/costs/alerts")
+async def get_cost_alerts(since: Optional[float] = None):
+    """Get cost alerts."""
+    from .cost_tracking import get_cost_tracker
+
+    tracker = await get_cost_tracker()
+    alerts = await tracker.get_alerts(since=since)
+    return [alert.dict() for alert in alerts]
+
+@app.post("/costs/budget")
+async def set_budget_limit(category: str, limit: float):
+    """Set budget limit."""
+    from .cost_tracking import get_cost_tracker
+
+    tracker = await get_cost_tracker()
+    await tracker.set_budget_limit(category, limit)
+    return {"message": f"Budget limit set for {category}: ${limit}"}
+
 # Startup and shutdown events
 @app.on_event("startup")
 async def startup_event():
     """Initialize on startup."""
     from .database import init_db
+    from .caching import get_cache_manager
+    from .cost_tracking import get_cost_tracker
+    from .secrets import get_secrets_manager
+
     await init_db()
+
+    # Initialize secrets manager
+    secrets_manager = await get_secrets_manager()
+    logger.info("Secrets manager initialized")
+
+    # Initialize cache manager
+    cache_manager = await get_cache_manager()
+    logger.info("Cache manager initialized")
+
+    # Initialize cost tracker
+    cost_tracker = await get_cost_tracker()
+    logger.info("Cost tracker initialized")
+
     logger.info("Application started", environment=settings.environment)
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown."""
     from .database import close_db
+    from .caching import close_cache_manager
+
     await close_db()
+    await close_cache_manager()
     logger.info("Application shutdown")
 
 if __name__ == "__main__":

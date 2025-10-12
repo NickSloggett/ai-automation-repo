@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Union
 import structlog
 from pydantic import BaseModel
 
+from ..caching import get_cache_manager
 from ..config import get_settings
 from ..monitoring import track_performance
 
@@ -48,6 +49,7 @@ class BaseAgent(ABC):
         self.config = config
         self.settings = get_settings()
         self.logger = logger.bind(agent_name=config.name)
+        self.cache_manager = None  # Will be initialized lazily
 
     @abstractmethod
     async def execute(self, input_data: Dict[str, Any]) -> AgentResult:
@@ -62,7 +64,7 @@ class BaseAgent(ABC):
         pass
 
     async def run(self, input_data: Dict[str, Any]) -> AgentResult:
-        """Run the agent with error handling and monitoring.
+        """Run the agent with error handling, monitoring, and caching.
 
         Args:
             input_data: Input data for the agent
@@ -74,6 +76,15 @@ class BaseAgent(ABC):
 
         try:
             self.logger.info("Starting agent execution", input_keys=list(input_data.keys()))
+
+            # Check cache if enabled
+            cached_result = None
+            if self.config.enable_caching and self.settings.enable_caching:
+                cached_result = await self.get_cached_result(input_data)
+
+            if cached_result:
+                self.logger.info("Using cached result", cache_hit=True)
+                return cached_result
 
             # Execute with timeout
             result = await asyncio.wait_for(
@@ -89,12 +100,18 @@ class BaseAgent(ABC):
                 "agent_name": self.config.name,
                 "execution_time": execution_time,
                 "timeout": self.config.timeout,
+                "cache_hit": False,
             })
+
+            # Cache the result if successful and caching is enabled
+            if result.success and self.config.enable_caching and self.settings.enable_caching:
+                await self.cache_result(input_data, result)
 
             self.logger.info(
                 "Agent execution completed successfully",
                 execution_time=execution_time,
-                success=result.success
+                success=result.success,
+                cached=False
             )
 
             return result
@@ -162,27 +179,69 @@ class BaseAgent(ABC):
         # Simple cache key generation - override for more complex scenarios
         return str(hash(str(sorted(input_data.items()))))
 
-    async def get_cached_result(self, cache_key: str) -> Optional[AgentResult]:
+    async def get_cached_result(self, input_data: Dict[str, Any]) -> Optional[AgentResult]:
         """Get cached result if available.
 
         Args:
-            cache_key: Cache key to look up
+            input_data: Input data to generate cache key from
 
         Returns:
             Cached result or None if not found
         """
-        # Override in subclasses to implement caching
+        if not self.settings.enable_caching or not self.config.enable_caching:
+            return None
+
+        try:
+            if self.cache_manager is None:
+                self.cache_manager = await get_cache_manager()
+
+            # Use agent result cache strategy
+            strategy = self.cache_manager.get_strategy("agent_result")
+            if not strategy:
+                from ..caching.strategies import AgentResultCacheStrategy
+                strategy = AgentResultCacheStrategy(self.cache_manager)
+                self.cache_manager.register_strategy("agent_result", strategy)
+
+            cache_key = strategy.generate_key(self.config.name, input_data)
+            cached_data = await strategy.get(cache_key)
+
+            if cached_data:
+                # Convert cached data back to AgentResult
+                result = AgentResult(**cached_data)
+                result.metadata["cache_hit"] = True
+                return result
+
+        except Exception as e:
+            self.logger.warning("Failed to get cached result", error=str(e))
+
         return None
 
-    async def cache_result(self, cache_key: str, result: AgentResult) -> None:
+    async def cache_result(self, input_data: Dict[str, Any], result: AgentResult) -> None:
         """Cache the result.
 
         Args:
-            cache_key: Cache key
+            input_data: Input data used to generate cache key
             result: Result to cache
         """
-        # Override in subclasses to implement caching
-        pass
+        if not self.settings.enable_caching or not self.config.enable_caching:
+            return
+
+        try:
+            if self.cache_manager is None:
+                self.cache_manager = await get_cache_manager()
+
+            # Use agent result cache strategy
+            strategy = self.cache_manager.get_strategy("agent_result")
+            if not strategy:
+                from ..caching.strategies import AgentResultCacheStrategy
+                strategy = AgentResultCacheStrategy(self.cache_manager)
+                self.cache_manager.register_strategy("agent_result", strategy)
+
+            cache_key = strategy.generate_key(self.config.name, input_data)
+            await strategy.set(cache_key, result.dict(), ttl=self.config.cache_ttl)
+
+        except Exception as e:
+            self.logger.warning("Failed to cache result", error=str(e))
 
     async def execute_with_retry(self, input_data: Dict[str, Any]) -> AgentResult:
         """Execute the agent with retry logic.

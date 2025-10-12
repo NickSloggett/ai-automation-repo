@@ -4,6 +4,7 @@ import pytest
 from src.agents.base import AgentConfig, AgentResult
 from src.agents.task import TaskAgent, TaskConfig, TaskStep
 from src.agents.decision import DecisionAgent, DecisionConfig
+from src.testing import AgentTester, create_test_agent, create_test_scenario
 
 
 @pytest.mark.asyncio
@@ -103,8 +104,63 @@ async def test_task_step_creation():
     assert step.retry_on_failure is True
 
 
+@pytest.mark.asyncio
+async def test_agent_tester_creation():
+    """Test agent tester creation."""
+    tester = AgentTester(TaskAgent)
+    assert tester.agent_class == TaskAgent
+    assert tester.agent_config.name == "test_agent"
 
 
+@pytest.mark.asyncio
+async def test_agent_tester_with_scenarios():
+    """Test agent tester with test scenarios."""
+    tester = AgentTester(TaskAgent)
 
+    # Add test scenarios
+    scenario1 = create_test_scenario(
+        name="success_scenario",
+        input_data={"task": "test task", "data": "test data"},
+        expected_success=True
+    )
+
+    scenario2 = create_test_scenario(
+        name="failure_scenario",
+        input_data={"invalid": "data"},
+        expected_success=False
+    )
+
+    tester.add_scenario(scenario1)
+    tester.add_scenario(scenario2)
+
+    assert len(tester.test_scenarios) == 2
+
+    # Note: Actual execution would require proper mocking of LLM calls
+    # This test validates the framework setup
+
+
+@pytest.mark.asyncio
+async def test_create_test_agent():
+    """Test test agent creation utility."""
+    agent = create_test_agent(name="custom_test_agent", description="Custom test")
+    assert agent.config.name == "custom_test_agent"
+    assert agent.config.description == "Custom test"
+    assert agent.config.enable_caching is False  # Disabled for tests
+
+
+@pytest.mark.asyncio
+async def test_test_scenario_creation():
+    """Test test scenario creation."""
+    scenario = create_test_scenario(
+        name="test_scenario",
+        input_data={"key": "value"},
+        expected_output="expected_result",
+        expected_success=True
+    )
+
+    assert scenario.name == "test_scenario"
+    assert scenario.input_data["key"] == "value"
+    assert scenario.expected_output == "expected_result"
+    assert scenario.expected_success is True
 
 
