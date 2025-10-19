@@ -78,10 +78,10 @@ async def list_tasks(
     """List all tasks."""
     try:
         query = select(Task)
-        
+
         if status_filter:
             query = query.where(Task.status == status_filter)
-        
+
         if task_type:
             query = query.where(Task.task_type == task_type)
 
@@ -148,7 +148,7 @@ async def retry_task(task_id: str, db: AsyncSession = Depends(get_db)):
         task.error = None
         task.started_at = None
         task.completed_at = None
-        
+
         await db.commit()
         await db.refresh(task)
 

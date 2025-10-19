@@ -27,7 +27,7 @@ def serve():
         from .api import app
         from .config import get_settings
         import uvicorn
-        
+
         settings = get_settings()
         uvicorn.run(
             app,
@@ -96,12 +96,12 @@ def downgrade():
 def seed():
     """Seed the database with demo data."""
     click.echo("Seeding database...")
-    
+
     async def _seed():
         from .database import AsyncSessionLocal
         from .database.models import Agent, Workflow
         from datetime import datetime
-        
+
         async with AsyncSessionLocal() as session:
             # Create demo agent
             demo_agent = Agent(
@@ -121,7 +121,7 @@ def seed():
                 updated_at=datetime.utcnow()
             )
             session.add(demo_agent)
-            
+
             # Create demo workflow
             demo_workflow = Workflow(
                 name="demo_data_processing",
@@ -156,9 +156,9 @@ def seed():
                 updated_at=datetime.utcnow()
             )
             session.add(demo_workflow)
-            
+
             await session.commit()
-    
+
     asyncio.run(_seed())
     click.echo("✓ Database seeded successfully")
 

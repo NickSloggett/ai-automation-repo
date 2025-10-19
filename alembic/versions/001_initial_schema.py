@@ -1,7 +1,7 @@
 """Initial schema
 
 Revision ID: 001
-Revises: 
+Revises:
 Create Date: 2024-01-01 00:00:00.000000
 
 """
@@ -216,39 +216,39 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_audit_logs_created_at'), table_name='audit_logs')
     op.drop_index(op.f('ix_audit_logs_action'), table_name='audit_logs')
     op.drop_table('audit_logs')
-    
+
     op.drop_index(op.f('ix_api_requests_user_id'), table_name='api_requests')
     op.drop_index(op.f('ix_api_requests_endpoint'), table_name='api_requests')
     op.drop_index(op.f('ix_api_requests_created_at'), table_name='api_requests')
     op.drop_table('api_requests')
-    
+
     op.drop_index(op.f('ix_users_username'), table_name='users')
     op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_index(op.f('ix_users_api_key'), table_name='users')
     op.drop_table('users')
-    
+
     op.drop_index(op.f('ix_vector_documents_vector_id'), table_name='vector_documents')
     op.drop_table('vector_documents')
-    
+
     op.drop_index(op.f('ix_tasks_task_type'), table_name='tasks')
     op.drop_index(op.f('ix_tasks_status'), table_name='tasks')
     op.drop_index(op.f('ix_tasks_priority'), table_name='tasks')
     op.drop_table('tasks')
-    
+
     op.drop_index(op.f('ix_workflow_step_executions_workflow_execution_id'), table_name='workflow_step_executions')
     op.drop_table('workflow_step_executions')
-    
+
     op.drop_index(op.f('ix_workflow_executions_status'), table_name='workflow_executions')
     op.drop_index(op.f('ix_workflow_executions_workflow_id'), table_name='workflow_executions')
     op.drop_table('workflow_executions')
-    
+
     op.drop_index(op.f('ix_workflows_name'), table_name='workflows')
     op.drop_table('workflows')
-    
+
     op.drop_index(op.f('ix_agent_executions_status'), table_name='agent_executions')
     op.drop_index(op.f('ix_agent_executions_agent_id'), table_name='agent_executions')
     op.drop_table('agent_executions')
-    
+
     op.drop_index(op.f('ix_agents_name'), table_name='agents')
     op.drop_index(op.f('ix_agents_agent_type'), table_name='agents')
     op.drop_table('agents')

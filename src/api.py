@@ -47,12 +47,12 @@ async def root():
 async def readiness_check():
     """Kubernetes readiness probe with database connectivity check."""
     from datetime import datetime
-    
+
     try:
         # Check database connectivity
         from .database import engine
         from sqlalchemy import text
-        
+
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
 
@@ -89,7 +89,7 @@ async def readiness_check():
 async def liveness_check():
     """Kubernetes liveness probe with basic system health."""
     from datetime import datetime
-    
+
     try:
         # Try to import psutil, but don't fail if not available
         try:
@@ -97,10 +97,10 @@ async def liveness_check():
             memory_percent = psutil.virtual_memory().percent
             cpu_percent = psutil.cpu_percent(interval=0.1)
             uptime_seconds = int(time.time() - psutil.boot_time())
-            
+
             # Check if critical services are running
             critical_services_healthy = memory_percent < 90 and cpu_percent < 95
-            
+
             return {
                 "status": "alive" if critical_services_healthy else "degraded",
                 "timestamp": datetime.utcnow().isoformat() + "Z",

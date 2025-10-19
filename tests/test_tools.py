@@ -6,7 +6,7 @@ from src.tools.base import Tool, ToolConfig, ToolResult
 
 class TestTool(Tool):
     """Test tool implementation."""
-    
+
     async def execute(self, **kwargs) -> ToolResult:
         """Execute test tool."""
         test_input = kwargs.get("input", "")
@@ -34,7 +34,7 @@ def tool_config():
 async def test_tool_creation(tool_config):
     """Test tool creation."""
     tool = TestTool(tool_config)
-    
+
     assert tool.name == "test_tool"
     assert tool.description == "A test tool"
     assert tool.config.timeout == 60
@@ -44,9 +44,9 @@ async def test_tool_creation(tool_config):
 async def test_tool_execution(tool_config):
     """Test tool execution."""
     tool = TestTool(tool_config)
-    
+
     result = await tool.run(input="test_data")
-    
+
     assert result.success is True
     assert result.data["output"] == "processed_test_data"
     assert result.execution_time >= 0
@@ -61,7 +61,7 @@ async def test_tool_result_model():
         execution_time=1.5,
         metadata={"tool": "test"}
     )
-    
+
     assert result.success is True
     assert result.data["key"] == "value"
     assert result.execution_time == 1.5
@@ -72,14 +72,14 @@ async def test_tool_result_model():
 @pytest.mark.asyncio
 async def test_tool_error_handling(tool_config):
     """Test tool error handling."""
-    
+
     class FailingTool(Tool):
         async def execute(self, **kwargs) -> ToolResult:
             raise Exception("Tool failed")
-    
+
     tool = FailingTool(tool_config)
     result = await tool.run()
-    
+
     assert result.success is False
     assert "Tool failed" in result.error
 

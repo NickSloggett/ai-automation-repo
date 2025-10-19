@@ -62,7 +62,7 @@ async def test_workflow_creation(workflow_config, workflow_steps):
         config=workflow_config,
         steps=workflow_steps
     )
-    
+
     assert workflow.id == "test_workflow_1"
     assert workflow.config.name == "test_workflow"
     assert len(workflow.steps) == 2
@@ -72,7 +72,7 @@ async def test_workflow_creation(workflow_config, workflow_steps):
 async def test_workflow_engine_dependency_graph():
     """Test workflow engine dependency graph building."""
     engine = WorkflowEngine()
-    
+
     steps = [
         WorkflowStep(
             id="step1",
@@ -102,13 +102,13 @@ async def test_workflow_engine_dependency_graph():
             timeout=60
         )
     ]
-    
+
     graph = engine._build_dependency_graph(steps)
-    
+
     # First level should have step1
     assert len(graph) == 2
     assert graph[0][0].id == "step1"
-    
+
     # Second level should have step2 and step3
     assert len(graph[1]) == 2
     assert set(s.id for s in graph[1]) == {"step2", "step3"}
@@ -133,7 +133,7 @@ async def test_workflow_step_creation():
         timeout=60,
         condition="true"
     )
-    
+
     assert step.id == "test_step"
     assert step.name == "Test Step"
     assert step.agent_type == "task"
