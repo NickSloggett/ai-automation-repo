@@ -12,7 +12,7 @@ settings = get_settings()
 Base = declarative_base()
 
 # Convert sync URL to async URL
-database_url = settings.database_url
+database_url = settings.database.url
 if database_url.startswith("postgresql://"):
     database_url = database_url.replace("postgresql://", "postgresql+asyncpg://")
 elif database_url.startswith("sqlite://"):
@@ -21,7 +21,7 @@ elif database_url.startswith("sqlite://"):
 # Create async engine
 engine = create_async_engine(
     database_url,
-    echo=settings.database_echo,
+    echo=settings.database.echo,
     pool_pre_ping=True,
     poolclass=NullPool if "sqlite" in database_url else None,
 )

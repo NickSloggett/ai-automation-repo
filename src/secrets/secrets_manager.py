@@ -168,3 +168,4 @@ async def get_database_url() -> Optional[str]:
     """Get database URL from secrets."""
     manager = await get_secrets_manager()
     return await manager.get_secret("DATABASE_URL")
+

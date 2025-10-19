@@ -207,3 +207,4 @@ class SemanticCacheStrategy(BaseCacheStrategy):
             return 0.0
 
         return dot_product / (norm1 * norm2)
+

@@ -210,3 +210,4 @@ async def get_circuit_breaker_stats() -> Dict[str, Any]:
     for name, cb in _circuit_breakers.items():
         stats[name] = await cb.get_stats()
     return stats
+

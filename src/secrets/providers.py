@@ -182,3 +182,4 @@ class AWSSecretsProvider(SecretsProvider):
                         secrets[name] = value
 
         return secrets
+

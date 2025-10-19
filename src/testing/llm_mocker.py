@@ -200,3 +200,4 @@ class LLMMocker:
         mock_provider.chat = AsyncMock(side_effect=self.chat)
         mock_provider.stream = self.stream  # Not async for simplicity
         return mock_provider
+

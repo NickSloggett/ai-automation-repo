@@ -97,3 +97,4 @@ class CostAlert(BaseModel):
     current_value: float
     timestamp: float
     metadata: Dict[str, Any] = {}
+

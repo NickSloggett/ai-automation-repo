@@ -37,6 +37,13 @@ def get_llm(
     """
     provider = (provider or settings.llm.provider).lower()
 
+    # If no API key is configured for OpenAI, fall back to a local provider for CI/testing
+    if provider == "openai" and (api_key is None) and (settings.llm.api_key is None or str(settings.llm.api_key) == ""):
+        import logging
+        logger = structlog.get_logger(__name__)  # type: ignore
+        logger.info("No OpenAI API key configured; falling back to local provider for CI/testing", provider="local")
+        provider = "local"
+
     logger.info("Initializing LLM provider", provider=provider, model=model or settings.llm.model)
 
     if provider == "openai":

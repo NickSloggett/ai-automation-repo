@@ -232,3 +232,4 @@ async def close_cache_manager() -> None:
     if _cache_manager:
         await _cache_manager.close()
         _cache_manager = None
+

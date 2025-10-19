@@ -9,3 +9,4 @@ class CircuitBreakerState(Enum):
     CLOSED = "closed"  # Normal operation
     OPEN = "open"  # Failing, requests rejected
     HALF_OPEN = "half_open"  # Testing if service recovered
+

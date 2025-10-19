@@ -75,3 +75,4 @@ def update_model_pricing(model_name: str, input_cost: float, output_cost: float)
 def get_all_model_pricing() -> Dict[str, ModelPricing]:
     """Get all model pricing information."""
     return MODEL_PRICING.copy()
+
