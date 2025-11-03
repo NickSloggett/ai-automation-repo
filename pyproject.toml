@@ -8,7 +8,7 @@ license = "MIT"
 packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.14"
+python = ">=3.11,<3.14"  # Supports Python 3.11, 3.12, 3.13
 # Core AI/ML frameworks
 langchain = "^0.3.0"
 langchain-openai = "^0.2.0"
@@ -59,14 +59,23 @@ pytest-cov = "^6.0.0"
 pytest-asyncio = "^0.25.0"
 pytest-xdist = "^3.6.0"
 pytest-mock = "^3.14.0"
+pytest-benchmark = "^5.1.0"  # Performance benchmarking
+pytest-randomly = "^3.16.0"  # Randomize test order to catch state dependencies
+pytest-timeout = "^2.3.0"  # Prevent hanging tests
+pytest-sugar = "^1.0.0"  # Better test output
+pytest-clarity = "^1.0.0"  # Better assertion diffs
 hypothesis = "^6.122.0"
-black = "^24.10.0"
-ruff = "^0.9.0"
+faker = "^34.0.0"  # Generate fake data for testing
+ruff = "^0.9.0"  # Replaces Black, isort, and Flake8
 mypy = "^1.13.0"
-isort = "^5.13.0"
+pyright = "^1.1.391"  # Additional type checker
 bandit = "^1.8.0"
 safety = "^3.2.0"
 pre-commit = "^4.0.0"
+uv = "^0.5.11"  # Ultra-fast package installer
+vulture = "^2.14"  # Find dead code
+radon = "^6.0.0"  # Code complexity metrics
+pip-audit = "^2.9.0"  # Security audit for dependencies
 
 # Configuration and utilities
 pydantic = "^2.10.0"
@@ -101,6 +110,18 @@ boto3 = "^1.34.0"  # AWS Secrets Manager
 jupyter = "^1.0.0"
 notebook = "^7.0.0"
 ipykernel = "^6.27.0"
+mkdocs = "^1.6.0"  # Documentation
+mkdocs-material = "^9.5.0"  # Material theme
+mkdocstrings = {extras = ["python"], version = "^0.27.0"}  # Auto API docs
+mkdocs-gen-files = "^0.5.0"  # Generate files
+mkdocs-literate-nav = "^0.6.0"  # Navigation
+mkdocs-section-index = "^0.3.0"  # Section index
+mkdocs-git-revision-date-localized-plugin = "^1.3.0"  # Git dates
+mkdocs-minify-plugin = "^0.8.0"  # Minify HTML/CSS/JS
+pymdown-extensions = "^10.0"  # Markdown extensions
+py-spy = "^0.4.0"  # Profiling tool
+memray = "^1.15.0"  # Memory profiler
+scalene = "^1.5.0"  # High-performance CPU+GPU+memory profiler
 
 [tool.poetry.scripts]
 ai-automation = "src.cli:main"
@@ -109,28 +130,7 @@ ai-automation = "src.cli:main"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.black]
-line-length = 88
-target-version = ['py311']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  # directories
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | build
-  | dist
-)/
-'''
-
-[tool.isort]
-profile = "black"
-line_length = 88
-known_first_party = ["src"]
+# Removed [tool.black] and [tool.isort] - now using Ruff for all formatting and linting
 
 [tool.mypy]
 python_version = "3.11"
@@ -149,48 +149,102 @@ strict_equality = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q --cov=src --cov-report=html --cov-report=term-missing"
+addopts = """
+    -ra -q
+    --cov=src
+    --cov-report=html
+    --cov-report=term-missing
+    --cov-report=json
+    --cov-fail-under=80
+    --strict-markers
+    --strict-config
+    --benchmark-skip
+    --benchmark-autosave
+    --randomly-seed=last
+    --randomly-dont-reorganise
+    --timeout=300
+    -n auto
+"""
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "e2e: marks tests as end-to-end tests",
+    "benchmark: marks tests as benchmarks",
+]
 
 [tool.coverage.run]
 source = ["src"]
 omit = ["*/tests/*", "*/test_*", "*/__init__.py"]
+parallel = true
+concurrency = ["thread", "gevent"]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
 
 [tool.ruff]
 target-version = "py311"
 line-length = 88
+fix = true
+
+[tool.ruff.lint]
 select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "B",  # flake8-bugbear
-    "C4", # flake8-comprehensions
-    "UP", # pyupgrade
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes
+    "I",     # isort
+    "B",     # flake8-bugbear
+    "C4",    # flake8-comprehensions
+    "UP",    # pyupgrade
+    "SIM",   # flake8-simplify
+    "TCH",   # flake8-type-checking
+    "PTH",   # flake8-use-pathlib
+    "RUF",   # Ruff-specific rules
+    "ASYNC", # flake8-async
+    "S",     # flake8-bandit (security)
 ]
 ignore = [
     # Allow non-abstract empty methods in abstract base classes
     "B027",
-    # Allow boolean positional values in function calls, like `dict.get(... True)`
+    # Allow boolean positional values in function calls
     "FBT003",
     # Ignore checks for possible passwords
     "S105", "S106", "S107",
     # Ignore complexity
     "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
 ]
-[tool.ruff.per-file-ignores]
+
+[tool.ruff.lint.per-file-ignores]
 # Tests can use magic values, assertions, and imports
-"tests/**/*" = ["PLR2004", "S101", "TID252"]
+"tests/**/*" = ["PLR2004", "S101", "TID252", "S"]
 # Examples and scripts can print
 "examples/**/*" = ["T201"]
 "scripts/**/*" = ["T201"]
 
-[tool.ruff.isort]
-profile = "black"
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 18
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

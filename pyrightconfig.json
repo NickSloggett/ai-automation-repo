@@ -1,0 +1,25 @@
+{
+  "include": ["src"],
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.*",
+    "build",
+    "dist"
+  ],
+  "pythonVersion": "3.11",
+  "pythonPlatform": "All",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "reportUnusedImport": "warning",
+  "reportUnusedVariable": "warning",
+  "reportDuplicateImport": "warning",
+  "reportPrivateUsage": "warning",
+  "reportUnknownParameterType": "information",
+  "reportUnknownArgumentType": "information",
+  "reportUnknownVariableType": "information",
+  "reportUnknownMemberType": "information",
+  "venvPath": ".",
+  "venv": ".venv"
+}

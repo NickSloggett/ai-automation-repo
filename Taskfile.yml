@@ -1,0 +1,284 @@
+version: '3'
+
+vars:
+  POETRY_RUN: poetry run
+  PYTHON_VERSION: 3.13
+
+tasks:
+  default:
+    desc: List all available tasks
+    cmds:
+      - task --list
+
+  # Development tasks
+  install:
+    desc: Install all dependencies using Poetry
+    cmds:
+      - poetry install --no-interaction
+      - pre-commit install
+
+  install:fast:
+    desc: Install dependencies using uv (ultra-fast)
+    cmds:
+      - pip install uv==0.5.11
+      - uv pip install -r <(poetry export -f requirements.txt --with dev)
+
+  update:
+    desc: Update all dependencies
+    cmds:
+      - poetry update
+      - pre-commit autoupdate
+
+  # Code quality tasks
+  lint:
+    desc: Run all linters
+    cmds:
+      - task: lint:ruff
+      - task: lint:bandit
+
+  lint:ruff:
+    desc: Run Ruff linter
+    cmds:
+      - "{{.POETRY_RUN}} ruff check . --fix"
+
+  lint:bandit:
+    desc: Run Bandit security linter
+    cmds:
+      - "{{.POETRY_RUN}} bandit -r src -c pyproject.toml"
+
+  format:
+    desc: Format code with Ruff
+    cmds:
+      - "{{.POETRY_RUN}} ruff format ."
+
+  format:check:
+    desc: Check code formatting without making changes
+    cmds:
+      - "{{.POETRY_RUN}} ruff format --check ."
+
+  typecheck:
+    desc: Run all type checkers
+    cmds:
+      - task: typecheck:mypy
+      - task: typecheck:pyright
+
+  typecheck:mypy:
+    desc: Run MyPy type checker
+    cmds:
+      - "{{.POETRY_RUN}} mypy src --ignore-missing-imports"
+
+  typecheck:pyright:
+    desc: Run Pyright type checker
+    cmds:
+      - "{{.POETRY_RUN}} pyright src"
+
+  check:
+    desc: Run all quality checks (lint, format check, type check)
+    cmds:
+      - task: lint
+      - task: format:check
+      - task: typecheck
+
+  # Testing tasks
+  test:
+    desc: Run all tests
+    cmds:
+      - "{{.POETRY_RUN}} pytest"
+
+  test:unit:
+    desc: Run unit tests only
+    cmds:
+      - "{{.POETRY_RUN}} pytest -m unit"
+
+  test:integration:
+    desc: Run integration tests only
+    cmds:
+      - "{{.POETRY_RUN}} pytest -m integration"
+
+  test:e2e:
+    desc: Run end-to-end tests
+    cmds:
+      - "{{.POETRY_RUN}} pytest -m e2e"
+
+  test:watch:
+    desc: Run tests in watch mode
+    cmds:
+      - "{{.POETRY_RUN}} ptw --runner 'pytest -x'"
+
+  test:cov:
+    desc: Run tests with coverage report
+    cmds:
+      - "{{.POETRY_RUN}} pytest --cov=src --cov-report=html --cov-report=term-missing"
+
+  test:benchmark:
+    desc: Run performance benchmarks
+    cmds:
+      - "{{.POETRY_RUN}} pytest --benchmark-only"
+
+  # Database tasks
+  db:init:
+    desc: Initialize database
+    cmds:
+      - "{{.POETRY_RUN}} python -m src.cli db init"
+
+  db:migrate:
+    desc: Create a new database migration
+    cmds:
+      - "{{.POETRY_RUN}} python -m src.cli db migrate -m '{{.MESSAGE}}'"
+    requires:
+      vars: [MESSAGE]
+
+  db:upgrade:
+    desc: Apply database migrations
+    cmds:
+      - "{{.POETRY_RUN}} python -m src.cli db upgrade"
+
+  db:seed:
+    desc: Seed database with demo data
+    cmds:
+      - "{{.POETRY_RUN}} python -m src.cli db seed"
+
+  db:reset:
+    desc: Reset database (WARNING: destructive)
+    cmds:
+      - "{{.POETRY_RUN}} python -m src.cli db reset"
+    prompt: This will delete all data. Are you sure?
+
+  # Application tasks
+  serve:
+    desc: Start the API server
+    cmds:
+      - "{{.POETRY_RUN}} python -m src.cli serve"
+
+  serve:dev:
+    desc: Start the API server in development mode with hot reload
+    cmds:
+      - "{{.POETRY_RUN}} uvicorn src.api:app --reload --host 0.0.0.0 --port 8000"
+
+  # Documentation tasks
+  docs:build:
+    desc: Build documentation
+    cmds:
+      - "{{.POETRY_RUN}} mkdocs build"
+
+  docs:serve:
+    desc: Serve documentation locally
+    cmds:
+      - "{{.POETRY_RUN}} mkdocs serve"
+
+  docs:deploy:
+    desc: Deploy documentation to GitHub Pages
+    cmds:
+      - "{{.POETRY_RUN}} mkdocs gh-deploy --force"
+
+  # Docker tasks
+  docker:build:
+    desc: Build Docker image
+    cmds:
+      - docker build -t ai-automation:latest .
+
+  docker:run:
+    desc: Run Docker container
+    cmds:
+      - docker run -p 8000:8000 ai-automation:latest
+
+  docker:compose:up:
+    desc: Start services with docker-compose
+    cmds:
+      - docker-compose up -d
+
+  docker:compose:down:
+    desc: Stop services with docker-compose
+    cmds:
+      - docker-compose down
+
+  # Security tasks
+  security:
+    desc: Run all security checks
+    cmds:
+      - task: security:bandit
+      - task: security:safety
+      - task: security:audit
+
+  security:bandit:
+    desc: Run Bandit security linter
+    cmds:
+      - "{{.POETRY_RUN}} bandit -r src"
+
+  security:safety:
+    desc: Check for known security vulnerabilities
+    cmds:
+      - "{{.POETRY_RUN}} safety check"
+
+  security:audit:
+    desc: Audit dependencies for vulnerabilities
+    cmds:
+      - "{{.POETRY_RUN}} pip-audit"
+
+  # Analysis tasks
+  analyze:complexity:
+    desc: Analyze code complexity
+    cmds:
+      - "{{.POETRY_RUN}} radon cc src -a -nb"
+      - "{{.POETRY_RUN}} radon mi src"
+
+  analyze:dead:
+    desc: Find dead/unused code
+    cmds:
+      - "{{.POETRY_RUN}} vulture src"
+
+  # Profiling tasks
+  profile:cpu:
+    desc: Profile CPU usage with py-spy
+    cmds:
+      - "{{.POETRY_RUN}} py-spy record -o profile.svg -- python -m src.cli serve"
+
+  profile:memory:
+    desc: Profile memory usage with memray
+    cmds:
+      - "{{.POETRY_RUN}} memray run python -m src.cli serve"
+
+  # Build tasks
+  build:
+    desc: Build distribution packages
+    cmds:
+      - poetry build
+
+  build:check:
+    desc: Check if the package builds correctly
+    cmds:
+      - poetry check
+
+  # Clean tasks
+  clean:
+    desc: Clean all generated files
+    cmds:
+      - rm -rf .pytest_cache
+      - rm -rf htmlcov
+      - rm -rf .coverage
+      - rm -rf coverage.xml
+      - rm -rf dist
+      - rm -rf build
+      - rm -rf *.egg-info
+      - find . -type d -name __pycache__ -exec rm -rf {} +
+      - find . -type f -name "*.pyc" -delete
+
+  # Pre-commit tasks
+  pre-commit:
+    desc: Run pre-commit hooks on all files
+    cmds:
+      - pre-commit run --all-files
+
+  pre-commit:update:
+    desc: Update pre-commit hooks
+    cmds:
+      - pre-commit autoupdate
+
+  # CI tasks (runs in CI pipeline)
+  ci:
+    desc: Run full CI pipeline locally
+    cmds:
+      - task: check
+      - task: test:cov
+      - task: security
+      - task: build:check

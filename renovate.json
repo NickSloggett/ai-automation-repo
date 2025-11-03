@@ -1,0 +1,87 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":separateMajorReleases",
+    "group:allNonMajor"
+  ],
+  "timezone": "America/Los_Angeles",
+  "schedule": ["before 5am on monday"],
+  "labels": ["dependencies"],
+  "assignees": ["@NickSloggett"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "packageRules": [
+    {
+      "description": "Auto-merge minor and patch updates for development dependencies",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
+    },
+    {
+      "description": "Group all pytest packages together",
+      "matchPackagePatterns": ["^pytest"],
+      "groupName": "pytest packages",
+      "schedule": ["before 5am on monday"]
+    },
+    {
+      "description": "Group all langchain packages together",
+      "matchPackagePatterns": ["^langchain"],
+      "groupName": "langchain packages"
+    },
+    {
+      "description": "Group all AWS packages together",
+      "matchPackagePatterns": ["^boto3", "^botocore"],
+      "groupName": "AWS SDK"
+    },
+    {
+      "description": "Group GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions",
+      "schedule": ["before 5am on the first day of the month"]
+    },
+    {
+      "description": "Require manual approval for major version updates",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true,
+      "schedule": ["at any time"]
+    },
+    {
+      "description": "Pin Docker digests for security",
+      "matchDatasources": ["docker"],
+      "pinDigests": true
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "assignees": ["@NickSloggett"],
+    "schedule": ["at any time"]
+  },
+  "osvVulnerabilityAlerts": true,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 5am on sunday"]
+  },
+  "python": {
+    "enabled": true
+  },
+  "poetry": {
+    "enabled": true,
+    "fileMatch": ["(^|/)pyproject\\.toml$"]
+  },
+  "github-actions": {
+    "enabled": true,
+    "fileMatch": ["^\\.github/workflows/[^/]+\\.ya?ml$"]
+  },
+  "docker": {
+    "enabled": true,
+    "fileMatch": ["(^|/|\\.)Dockerfile$", "(^|/)docker-compose.*\\.ya?ml$"]
+  },
+  "pre-commit": {
+    "enabled": true
+  }
+}
