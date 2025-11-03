@@ -83,7 +83,7 @@ tasks:
   test:
     desc: Run all tests
     cmds:
-      - "{{.POETRY_RUN}} pytest"
+      - "{{.POETRY_RUN}} pytest -x --tb=short"
 
   test:unit:
     desc: Run unit tests only
