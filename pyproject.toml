@@ -22,7 +22,6 @@ groq = "^0.15.0"
 
 # Automation and orchestration
 crewai = "^0.203.0"
-autogen = "^0.4.0"
 prefect = "^3.0.0"
 celery = "^5.4.0"
 
@@ -94,10 +93,10 @@ aiocache = "^0.12.0"
 tenacity = "^9.0.0"
 
 # Distributed tracing
-opentelemetry-distro = "^0.50b0"
-opentelemetry-exporter-jaeger = "^1.22.0"
-opentelemetry-instrumentation-fastapi = "^0.50b0"
-opentelemetry-instrumentation-httpx = "^0.50b0"
+opentelemetry-distro = "^0.60b1"
+opentelemetry-exporter-otlp = "^1.39.1"
+opentelemetry-instrumentation-fastapi = "^0.60b1"
+opentelemetry-instrumentation-httpx = "^0.60b1"
 
 # Message queue (RabbitMQ)
 aio-pika = "^9.4.0"

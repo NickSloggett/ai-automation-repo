@@ -1,5 +1,7 @@
 # ✅ TRANSFORMATION COMPLETE
 
+> Archived transformation report. Canonical docs now live in `CHANGELOG.md` and `MIGRATION.md`.
+
 ## 🎉 Your AI Automation Repository is Now Production-Ready!
 
 **Date**: September 29, 2025  

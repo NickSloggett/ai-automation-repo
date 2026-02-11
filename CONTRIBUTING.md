@@ -49,12 +49,12 @@ Thank you for your interest in contributing to the AI Automation Boilerplate! Th
 poetry run pytest
 
 # Check code formatting
-poetry run black --check src/
-poetry run isort --check-only src/
-poetry run flake8 src/
+poetry run ruff check .
+poetry run ruff format --check .
 
 # Type checking
-poetry run mypy src/
+poetry run mypy src --ignore-missing-imports
+poetry run pyright src
 ```
 
 ## 🔄 Development Process
@@ -68,6 +68,18 @@ We follow a **feature-branch workflow**:
 - `feature/*` - New features or enhancements
 - `bugfix/*` - Bug fixes
 - `hotfix/*` - Critical fixes for production
+
+### Branch Protection and Required Checks
+
+The protected `main` branch should require these checks before merge:
+
+- `Lint & Format Check`
+- `Type Checking`
+- `Test Suite (Python 3.11, 3.12, 3.13)`
+- `Security Scanning`
+- `Build Check`
+- `Docker Multi-Arch Build`
+- `Dependency Review` (pull requests only)
 
 ### Creating a Feature Branch
 

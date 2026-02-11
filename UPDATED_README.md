@@ -1,5 +1,7 @@
 # 🤖 AI Automation Agency Platform - **PRODUCTION READY**
 
+> Archived modernization snapshot. Canonical docs now live in `CHANGELOG.md` and `MIGRATION.md`.
+
 > **The Complete Platform for Running Your AI Automation Agency**
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)

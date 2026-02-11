@@ -1,5 +1,7 @@
 # 🚀 Ultra Modernization 2025 - Bleeding Edge Transformation
 
+> Archived modernization snapshot. Canonical docs now live in `CHANGELOG.md` and `MIGRATION.md`.
+
 **Date**: November 3, 2025
 **Version**: 2.0
 **Status**: ✅ Complete
